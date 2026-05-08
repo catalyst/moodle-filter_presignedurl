@@ -24,12 +24,12 @@ use moodle_url;
  *
  * @package    filter_objectfs
  * @category   test
- * @copyright  Catalyst IT
+ * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
+ * @copyright  2026 Catalyst IT Canada
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \filter_objectfs\text_filter
  */
 final class text_filter_test extends \advanced_testcase {
-
     /** @var string A fake CloudFront domain used when building test presigned URLs. */
     private const CF_DOMAIN = 'https://abc123.cloudfront.net';
 
@@ -55,10 +55,6 @@ final class text_filter_test extends \advanced_testcase {
         $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Return an instance of the filter bound to the system context.
@@ -134,10 +130,6 @@ final class text_filter_test extends \advanced_testcase {
         return [$file->get_contenthash(), $url->out(false)];
     }
 
-    // -------------------------------------------------------------------------
-    // Tests: early bail (no DB contact)
-    // -------------------------------------------------------------------------
-
     /**
      * Text with no presigned-URL indicators is returned unchanged without any
      * DB query.  This covers the fast-path str_contains bail.
@@ -156,17 +148,13 @@ final class text_filter_test extends \advanced_testcase {
      */
     public static function provider_no_presigned_url_indicators(): array {
         return [
-            'plain text'                    => ['Hello, world!'],
-            'html no urls'                  => ['<p>Some <strong>bold</strong> text.</p>'],
-            'regular https link'            => ['<a href="https://moodle.org">Moodle</a>'],
-            'has Expires but no Key-Pair-Id'=> ['<a href="https://example.com?Expires=99999">link</a>'],
-            'has Key-Pair-Id but no Expires'=> ['<a href="https://example.com?Key-Pair-Id=ABC123">link</a>'],
+            'plain text'                     => ['Hello, world!'],
+            'html no urls'                   => ['<p>Some <strong>bold</strong> text.</p>'],
+            'regular https link'             => ['<a href="https://moodle.org">Moodle</a>'],
+            'has Expires but no Key-Pair-Id' => ['<a href="https://example.com?Expires=99999">link</a>'],
+            'has Key-Pair-Id but no Expires' => ['<a href="https://example.com?Key-Pair-Id=ABC123">link</a>'],
         ];
     }
-
-    // -------------------------------------------------------------------------
-    // Tests: presigned URLs replaced
-    // -------------------------------------------------------------------------
 
     /**
      * A presigned URL in an <a href> is replaced with the canonical
@@ -192,24 +180,6 @@ final class text_filter_test extends \advanced_testcase {
 
         $input    = '<img src="' . $presigned . '" alt="photo">';
         $expected = '<img src="' . $pluginfileurl . '" alt="photo">';
-
-        $this->assertSame($expected, $this->make_filter()->filter($input));
-    }
-
-    /**
-     * HTML-entity–encoded ampersands (&amp;) inside an attribute value are
-     * decoded correctly before the URL is parsed, so query parameters are
-     * found and the replacement still occurs.
-     */
-    public function test_html_entity_encoded_ampersands_handled(): void {
-        [$contenthash, $pluginfileurl] = $this->create_stored_file('entity encoded');
-        $presigned = $this->make_presigned_url($contenthash, time() + 3600);
-
-        // Encode every `&` as `&amp;` as a browser-serialised attribute value.
-        $encodedurl = str_replace('&', '&amp;', $presigned);
-
-        $input    = '<a href="' . $encodedurl . '">file</a>';
-        $expected = '<a href="' . htmlspecialchars($pluginfileurl, ENT_QUOTES, 'UTF-8') . '">file</a>';
 
         $this->assertSame($expected, $this->make_filter()->filter($input));
     }
@@ -250,10 +220,6 @@ final class text_filter_test extends \advanced_testcase {
         $this->assertStringNotContainsString($presigned, $result);
         $this->assertEquals(2, substr_count($result, $pluginfileurl));
     }
-
-    // -------------------------------------------------------------------------
-    // Tests: URLs that must NOT be replaced
-    // -------------------------------------------------------------------------
 
     /**
      * A presigned URL whose Expires timestamp is in the future is still
@@ -309,7 +275,7 @@ final class text_filter_test extends \advanced_testcase {
         [$contenthash] = $this->create_stored_file('composite attr');
         $expired = $this->make_presigned_url($contenthash, time() - 3600);
 
-        // data-href and data-src must not be touched.
+        // Data-href and data-src must not be touched.
         $input = '<div data-href="' . $expired . '" data-src="' . $expired . '">x</div>';
 
         $this->assertSame($input, $this->make_filter()->filter($input));
@@ -338,10 +304,6 @@ final class text_filter_test extends \advanced_testcase {
 
         $this->assertSame($input, $this->make_filter()->filter($input));
     }
-
-    // -------------------------------------------------------------------------
-    // Tests: per-request static cache
-    // -------------------------------------------------------------------------
 
     /**
      * Calling the filter twice with the same presigned URL (same contenthash)

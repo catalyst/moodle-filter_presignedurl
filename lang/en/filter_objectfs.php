@@ -18,7 +18,8 @@
  * Strings for filter_objectfs.
  *
  * @package    filter_objectfs
- * @copyright  Catalyst IT
+ * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
+ * @copyright  2026 Catalyst IT Canada
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

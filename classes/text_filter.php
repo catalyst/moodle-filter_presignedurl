@@ -36,11 +36,11 @@ use moodle_url;
  * plain text or other attribute types.
  *
  * @package    filter_objectfs
- * @copyright  Catalyst IT
+ * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
+ * @copyright  2026 Catalyst IT Canada
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_filter extends base_text_filter {
-
     /**
      * Per-request in-memory cache: contenthash => pluginfile URL string, or
      * false when no matching file record exists.
@@ -64,31 +64,19 @@ class text_filter extends base_text_filter {
      */
     #[\Override]
     public function filter($text, array $options = []): string {
-        // Quick bail: the CloudFront signing marker must appear in the raw HTML
-        // before we do any expensive work.  This exits immediately for the vast
-        // majority of text blocks that contain no presigned URLs at all.
+        // Exit if text is not CloudFront signed URL.
         if (!str_contains($text, 'Expires=') || !str_contains($text, 'Key-Pair-Id=')) {
             return $text;
         }
 
         // Match href and src attribute values inside single or double quotes.
-        // The negative lookbehind `(?<![a-zA-Z0-9_-])` prevents matching
-        // composite attribute names such as `data-href` or `data-src`.
         $pattern = '/(?<![a-zA-Z0-9_-])(href|src)=(["\'])([^"\']+)\2/i';
 
         if (!preg_match_all($pattern, $text, $matches, PREG_SET_ORDER)) {
             return $text;
         }
 
-        // --- Pass 1: collect presigned URLs and their contenthashes ---
-        //
-        // HTML attribute values may encode `&` as `&amp;`.  We HTML-decode
-        // before handing the string to parse_url / parse_str so that query
-        // parameters are parsed correctly.
-
-        /** @var array<string, string> $presignedmap  rawurl-as-in-HTML => contenthash */
         $presignedmap = [];
-        /** @var array<string, true> $pendinghashes  contenthash => true (de-duplicated) */
         $pendinghashes = [];
 
         foreach ($matches as $match) {
@@ -108,24 +96,20 @@ class text_filter extends base_text_filter {
             return $text;
         }
 
-        // --- Pass 2: resolve contenthashes → pluginfile.php URLs (batched) ---
-
+        // Resolve contenthashes → pluginfile.php URLs (batched).
         $pluginfileurls = $this->resolve_contenthashes(array_keys($pendinghashes));
 
         if (empty($pluginfileurls)) {
             return $text;
         }
 
-        // --- Pass 3: rewrite presigned attribute values ---
-        //
-        // We use preg_replace_callback so we handle every occurrence and
-        // rebuild the attribute cleanly, HTML-encoding the replacement URL.
-
+        // Rewrite presigned attribute values.
+        // We use preg_replace_callback so we handle every occurrence.
         return preg_replace_callback(
             $pattern,
             function (array $match) use ($presignedmap, $pluginfileurls): string {
-                $attr   = $match[1]; // 'href' or 'src'
-                $quote  = $match[2]; // '"' or "'"
+                $attr   = $match[1];
+                $quote  = $match[2];
                 $rawurl = $match[3];
 
                 if (!isset($presignedmap[$rawurl])) {
@@ -147,35 +131,15 @@ class text_filter extends base_text_filter {
         );
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
     /**
      * Extract the contenthash from a URL path and return it when the URL is an
      * ObjectFS CloudFront presigned URL, or return null otherwise.
-     *
-     * ObjectFS stores objects under the key `aa/bb/<40-char-sha1>` (where `aa`
-     * and `bb` are the first two and second two hex characters of the hash).
-     * The contenthash is therefore always the last path segment of the URL and
-     * is exactly 40 lowercase hexadecimal characters — no extra query parameter
-     * is required.
-     *
-     * Detection criteria:
-     *  - The final path segment is a valid 40-character lowercase hex SHA-1.
-     *  - Both `Expires` and `Key-Pair-Id` query parameters are present
-     *    (CloudFront signed URL markers; distinguishes these from plain S3 or
-     *    other URLs that happen to have a hex path segment).
-     *
-     * The expiry timestamp is intentionally NOT checked — all presigned URLs
-     * are replaced unconditionally because any URL that is valid today will
-     * silently break once its `Expires` value passes.
      *
      * @param  string $url  Fully decoded URL string.
      * @return string|null  The 40-char contenthash, or null when not applicable.
      */
     private function extract_contenthash_from_presigned_url(string $url): ?string {
-        // Avoid parse_url overhead when the required markers are obviously absent.
+        // Avoid parse_url overhead when the required markers are absent.
         if (!str_contains($url, 'Expires=') || !str_contains($url, 'Key-Pair-Id=')) {
             return null;
         }
@@ -203,16 +167,6 @@ class text_filter extends base_text_filter {
     /**
      * Resolve a list of contenthashes to their canonical pluginfile.php URLs.
      *
-     * Looks up the first non-draft, non-directory file record that carries
-     * each hash and builds a `moodle_url::make_pluginfile_url()` URL from it.
-     *
-     * Results are stored in {@see self::$urlcache} for the lifetime of the
-     * current request, so repeated references to the same file on the same
-     * page do not trigger additional DB queries.
-     *
-     * Hashes with no matching file record are cached as `false` so we also
-     * avoid re-querying for genuinely missing files.
-     *
      * @param  string[] $hashes  List of 40-char SHA-1 hex strings.
      * @return array<string, string>  contenthash => absolute pluginfile URL.
      */
@@ -237,8 +191,6 @@ class text_filter extends base_text_filter {
         }
 
         // Fetch one non-draft, non-directory file record per contenthash.
-        // ORDER BY id ASC gives a stable, deterministic choice when multiple
-        // records share the same hash (e.g. a file duplicated across courses).
         [$insql, $inparams] = $DB->get_in_or_equal($uncached, SQL_PARAMS_NAMED);
 
         $sql = "SELECT f.contenthash, f.contextid, f.component, f.filearea,
@@ -273,8 +225,7 @@ class text_filter extends base_text_filter {
             $result[$record->contenthash]         = $urlstring;
         }
 
-        // Cache misses: mark hashes with no file record so we skip the DB
-        // on subsequent calls within the same request.
+        // Cache misses: mark hashes with no file record so we skip the DB on subsequent calls.
         foreach ($uncached as $hash) {
             if (!isset(self::$urlcache[$hash])) {
                 self::$urlcache[$hash] = false;
