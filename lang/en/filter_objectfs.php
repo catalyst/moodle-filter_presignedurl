@@ -23,5 +23,5 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['filtername']      = 'ObjectFS expired presigned URL replacement';
+$string['filtername'] = 'ObjectFS expired presigned URL replacement';
 $string['privacy:metadata'] = 'The ObjectFS filter plugin does not store any personal data.';
