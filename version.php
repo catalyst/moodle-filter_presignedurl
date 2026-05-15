@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2026050700;       // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires  = 2025092600;       // Requires Moodle 4.5+.
+$plugin->requires  = 2024100700;       // Requires Moodle 4.5+.
 $plugin->component = 'filter_objectfs'; // Full name of the plugin (used for diagnostics).
 $plugin->dependencies = [
     'tool_objectfs' => ANY_VERSION,
