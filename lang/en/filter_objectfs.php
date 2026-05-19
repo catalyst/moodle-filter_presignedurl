@@ -19,9 +19,9 @@
  *
  * @package    filter_objectfs
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
- * @copyright  2026 Catalyst IT Canada
+ * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['filtername']      = 'ObjectFS expired presigned URL replacement';
+$string['filtername'] = 'ObjectFS expired presigned URL replacement';
 $string['privacy:metadata'] = 'The ObjectFS filter plugin does not store any personal data.';

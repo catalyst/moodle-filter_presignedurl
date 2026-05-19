@@ -37,7 +37,7 @@ use moodle_url;
  *
  * @package    filter_objectfs
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
- * @copyright  2026 Catalyst IT Canada
+ * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_filter extends base_text_filter {
@@ -63,7 +63,12 @@ class text_filter extends base_text_filter {
      * @return string          Filtered HTML content.
      */
     #[\Override]
-    public function filter($text, array $options = []): string {
+    public function filter($text, array $options = []): string {        // Bail out if no CloudFront resource domain is configured in tool_objectfs.
+        $cfdomain = get_config('tool_objectfs', 'cloudfrontresourcedomain');
+        if (empty($cfdomain)) {
+            return $text;
+        }
+
         // Exit if text is not CloudFront signed URL.
         if (!str_contains($text, 'Expires=') || !str_contains($text, 'Key-Pair-Id=')) {
             return $text;
@@ -83,7 +88,7 @@ class text_filter extends base_text_filter {
             $rawurl  = $match[3];
             $decoded = html_entity_decode($rawurl, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-            $contenthash = $this->extract_contenthash_from_presigned_url($decoded);
+            $contenthash = $this->extract_contenthash_from_presigned_url($decoded, $cfdomain);
             if ($contenthash === null) {
                 continue;
             }
@@ -133,19 +138,26 @@ class text_filter extends base_text_filter {
 
     /**
      * Extract the contenthash from a URL path and return it when the URL is an
-     * ObjectFS CloudFront presigned URL, or return null otherwise.
+     * ObjectFS CloudFront presigned URL whose host matches the configured domain,
+     * or return null otherwise.
      *
-     * @param  string $url  Fully decoded URL string.
-     * @return string|null  The 40-char contenthash, or null when not applicable.
+     * @param  string $url       Fully decoded URL string.
+     * @param  string $cfdomain  The configured CloudFront resource domain.
+     * @return string|null       The 40-char contenthash, or null when not applicable.
      */
-    private function extract_contenthash_from_presigned_url(string $url): ?string {
+    private function extract_contenthash_from_presigned_url(string $url, string $cfdomain): ?string {
         // Avoid parse_url overhead when the required markers are absent.
         if (!str_contains($url, 'Expires=') || !str_contains($url, 'Key-Pair-Id=')) {
             return null;
         }
 
         $parsed = parse_url($url);
-        if (empty($parsed['path']) || empty($parsed['query'])) {
+        if (empty($parsed['host']) || empty($parsed['path']) || empty($parsed['query'])) {
+            return null;
+        }
+
+        // Only rewrite URLs from the configured CloudFront distribution.
+        if (strcasecmp($parsed['host'], $cfdomain) !== 0) {
             return null;
         }
 
@@ -201,11 +213,11 @@ class text_filter extends base_text_filter {
                    AND f.filearea  != 'draft'
               ORDER BY f.id ASC";
 
-        $records = $DB->get_records_sql($sql, $inparams);
+        $recordset = $DB->get_recordset_sql($sql, $inparams);
 
         // Build the result map, keeping only the first record seen per hash.
         $seen = [];
-        foreach ($records as $record) {
+        foreach ($recordset as $record) {
             if (isset($seen[$record->contenthash])) {
                 continue;
             }
@@ -224,6 +236,7 @@ class text_filter extends base_text_filter {
             self::$urlcache[$record->contenthash] = $urlstring;
             $result[$record->contenthash]         = $urlstring;
         }
+        $recordset->close();
 
         // Cache misses: mark hashes with no file record so we skip the DB on subsequent calls.
         foreach ($uncached as $hash) {

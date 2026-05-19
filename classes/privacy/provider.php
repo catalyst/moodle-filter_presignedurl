@@ -24,7 +24,8 @@ use core_privacy\local\metadata\null_provider;
  * This plugin does not store any personal data.
  *
  * @package    filter_objectfs
- * @copyright  Catalyst IT
+ * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
+ * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements null_provider {

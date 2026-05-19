@@ -18,6 +18,7 @@ namespace filter_objectfs;
 
 use filter_objectfs\text_filter;
 use moodle_url;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for filter_objectfs\text_filter.
@@ -25,10 +26,10 @@ use moodle_url;
  * @package    filter_objectfs
  * @category   test
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
- * @copyright  2026 Catalyst IT Canada
+ * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \filter_objectfs\text_filter
  */
+#[CoversClass('\filter_objectfs\text_filter')]
 final class text_filter_test extends \advanced_testcase {
     /** @var string A fake CloudFront domain used when building test presigned URLs. */
     private const CF_DOMAIN = 'https://abc123.cloudfront.net';
@@ -50,9 +51,11 @@ final class text_filter_test extends \advanced_testcase {
         parent::setUp();
         $this->resetAfterTest();
 
+        // Configure the CloudFront resource domain so the filter is active.
+        set_config('cloudfrontresourcedomain', 'abc123.cloudfront.net', 'tool_objectfs');
+
         $rc = new \ReflectionClass(text_filter::class);
         $prop = $rc->getProperty('urlcache');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -348,5 +351,50 @@ final class text_filter_test extends \advanced_testcase {
 
         $this->assertArrayHasKey($unknownhash, $cache);
         $this->assertFalse($cache[$unknownhash]);
+    }
+
+    /**
+     * When the HTML contains `&amp;` instead of `&` in the presigned URL query
+     * string (as is common in rendered HTML attributes), the filter correctly
+     * decodes the URL before extracting the contenthash and replaces it with
+     * the canonical pluginfile.php URL.
+     */
+    public function test_html_encoded_ampersands_in_presigned_url(): void {
+        [$contenthash, $pluginfileurl] = $this->create_stored_file('html encoded url');
+        $presigned = $this->make_presigned_url($contenthash, time() + 3600);
+
+        // Replace `&` with `&amp;` to simulate how browsers / renderers encode attribute values.
+        $encodedpresigned = str_replace('&', '&amp;', $presigned);
+
+        $input    = '<a href="' . $encodedpresigned . '">file</a>';
+        $expected = '<a href="' . htmlspecialchars($pluginfileurl, ENT_QUOTES, 'UTF-8') . '">file</a>';
+
+        $this->assertSame($expected, $this->make_filter()->filter($input));
+    }
+
+    /**
+     * When no CloudFront resource domain is configured in tool_objectfs, the
+     * filter returns content unchanged without attempting any rewriting.
+     */
+    public function test_no_configured_domain_returns_unchanged(): void {
+        unset_config('cloudfrontresourcedomain', 'tool_objectfs');
+
+        [$contenthash] = $this->create_stored_file('no domain configured');
+        $presigned = $this->make_presigned_url($contenthash, time() + 3600);
+        $input     = '<a href="' . $presigned . '">file</a>';
+
+        $this->assertSame($input, $this->make_filter()->filter($input));
+    }
+
+    /**
+     * A presigned URL from a different CloudFront distribution (domain does not
+     * match the configured cloudfrontresourcedomain) is left unchanged.
+     */
+    public function test_different_cloudfront_domain_not_rewritten(): void {
+        [$contenthash] = $this->create_stored_file('wrong domain');
+        $presigned = $this->make_presigned_url($contenthash, time() + 3600, 'https://other.cloudfront.net');
+        $input     = '<a href="' . $presigned . '">file</a>';
+
+        $this->assertSame($input, $this->make_filter()->filter($input));
     }
 }
