@@ -37,7 +37,7 @@ use moodle_url;
  *
  * @package    filter_objectfs
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
- * @copyright  2026 Catalyst IT Canada
+ * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_filter extends base_text_filter {

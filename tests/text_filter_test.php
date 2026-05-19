@@ -26,7 +26,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * @package    filter_objectfs
  * @category   test
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
- * @copyright  2026 Catalyst IT Canada
+ * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 #[CoversClass('\filter_objectfs\text_filter')]
