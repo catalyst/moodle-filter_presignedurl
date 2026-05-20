@@ -63,7 +63,8 @@ class text_filter extends base_text_filter {
      * @return string          Filtered HTML content.
      */
     #[\Override]
-    public function filter($text, array $options = []): string {        // Bail out if no CloudFront resource domain is configured in tool_objectfs.
+    public function filter($text, array $options = []): string {
+        // Bail out if no CloudFront resource domain is configured in tool_objectfs.
         $cfdomain = get_config('tool_objectfs', 'cloudfrontresourcedomain');
         if (empty($cfdomain)) {
             return $text;
