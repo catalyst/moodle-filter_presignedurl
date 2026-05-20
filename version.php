@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for filter_objectfs.
+ * Version details for filter_presignedurl.
  *
- * @package    filter_objectfs
+ * @package    filter_presignedurl
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
  * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,9 +27,10 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2026050700;
 $plugin->requires  = 2024100700; // Requires Moodle 4.5+.
-$plugin->component = 'filter_objectfs';
+$plugin->component = 'filter_presignedurl';
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '1.0.0';
 $plugin->dependencies = [
     'tool_objectfs' => ANY_VERSION,
 ];
+$plugin->supported = [405, 501];

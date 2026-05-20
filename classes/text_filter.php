@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_objectfs;
+namespace filter_presignedurl;
 
 use core_filters\text_filter as base_text_filter;
 use moodle_url;
@@ -35,7 +35,7 @@ use moodle_url;
  * Only `href` and `src` attributes are rewritten; the filter does not touch
  * plain text or other attribute types.
  *
- * @package    filter_objectfs
+ * @package    filter_presignedurl
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
  * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

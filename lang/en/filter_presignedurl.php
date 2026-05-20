@@ -15,13 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for filter_objectfs.
+ * Strings for filter_presignedurl.
  *
- * @package    filter_objectfs
+ * @package    filter_presignedurl
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
  * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['filtername'] = 'ObjectFS expired presigned URL replacement';
+$string['filtername'] = 'ObjectFS Presigned URL Replacement';
 $string['privacy:metadata'] = 'The ObjectFS filter plugin does not store any personal data.';

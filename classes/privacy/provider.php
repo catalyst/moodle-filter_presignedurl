@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_objectfs\privacy;
+namespace filter_presignedurl\privacy;
 
 use core_privacy\local\metadata\null_provider;
 
 /**
- * Privacy subsystem implementation for filter_objectfs.
+ * Privacy subsystem implementation for filter_presignedurl.
  *
  * This plugin does not store any personal data.
  *
- * @package    filter_objectfs
+ * @package    filter_presignedurl
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
  * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

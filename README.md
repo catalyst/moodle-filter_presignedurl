@@ -1,4 +1,4 @@
-# filter_objectfs — ObjectFS CloudFront presigned URL filter
+# filter_presignedurl — ObjectFS CloudFront presigned URL filter
 
 A Moodle filter plugin that replaces ObjectFS CloudFront presigned URLs embedded in course content with permanent `pluginfile.php` URLs, ensuring files remain accessible after the presigned URL expires.
 
@@ -34,20 +34,26 @@ Only `href` and `src` attributes are rewritten. Composite attribute names such a
 | PHP | 8.1 or later |
 | [tool_objectfs](https://github.com/catalyst/moodle-tool_objectfs) | Any version |
 
+## Supported branches
+
+| Moodle version    | Branch                                                                                             | PHP  | MySQL   | PostgreSQL  |
+|-------------------|----------------------------------------------------------------------------------------------------|------|---------|-------------|
+| Moodle 4.5+       | [MOODLE_405_STABLE](https://github.com/catalyst/moodle-filter_presignedurl/tree/MOODLE_405_STABLE) | 8.1+ | 8.0+    | 13+         |
+
 ## Installation
 
 ### Via Git (recommended)
 
 ```bash
-cd /path/to/moodle/filter
-git clone https://github.com/your-org/moodle-filter_objectfs objectfs
+cd /path/to/moodle
+git clone git@github.com:catalyst/moodle-filter_presignedurl.git filter/presignedurl
 ```
 
 ### Manual
 
 1. Download the plugin archive.
-2. Extract it so the path is `<moodleroot>/filter/objectfs/`.
-3. Ensure the directory contains `version.php`, `classes/text_filter.php`, `lang/en/filter_objectfs.php`, and `classes/privacy/provider.php`.
+2. Extract it so the path is `<moodleroot>/filter/presignedurl/`.
+3. Ensure the directory contains `version.php`, `classes/text_filter.php`, `lang/en/filter_presignedurl.php`, and `classes/privacy/provider.php`.
 
 ### Database upgrade
 
@@ -64,12 +70,12 @@ Or navigate to **Site administration → Notifications** in your browser and fol
 ### Enable the filter
 
 1. Go to **Site administration → Plugins → Filters → Manage filters**.
-2. Find **ObjectFS expired presigned URL replacement** in the list.
-3. Set its state to **On**.
+2. Find **ObjectFS Presigned URL Replacement** in the list.
+3. Set its state to **Enabled**.
 
 ### Filter order
 
-This filter rewrites raw URLs, so it should run **before** content-rendering filters. In the Manage filters interface, use the up/down arrows to position `filter_objectfs` above filters such as:
+This filter rewrites raw URLs, so it should run **before** content-rendering filters. In the Manage filters interface, use the up/down arrows to position `filter_presignedurl` above filters such as:
 
 - Multi-language content (`filter_multilang`)
 - Activity names auto-linking (`filter_activitynames`)
@@ -86,14 +92,14 @@ The plugin includes a PHPUnit test suite covering URL detection, DB resolution, 
 
 ```bash
 # From the Moodle root
-vendor/bin/phpunit filter/objectfs/tests/text_filter_test.php
+vendor/bin/phpunit filter/presignedurl/tests/text_filter_test.php
 ```
 
 To run via the Moodle test runner:
 
 ```bash
 php admin/tool/phpunit/cli/init.php
-vendor/bin/phpunit --testsuite filter_objectfs_testsuite
+vendor/bin/phpunit --testsuite filter_presignedurl_testsuite
 ```
 
 ## Limitations

@@ -14,22 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_objectfs;
+namespace filter_presignedurl;
 
-use filter_objectfs\text_filter;
+use filter_presignedurl\text_filter;
 use moodle_url;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
- * Unit tests for filter_objectfs\text_filter.
+ * Unit tests for filter_presignedurl\text_filter.
  *
- * @package    filter_objectfs
+ * @package    filter_presignedurl
  * @category   test
  * @author     Niko Hoogeveen <niko.hoogeveen@catalyst-ca.net>
  * @copyright  2026 Catalyst IT Canada LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[CoversClass('\filter_objectfs\text_filter')]
+#[CoversClass('\filter_presignedurl\text_filter')]
 final class text_filter_test extends \advanced_testcase {
     /** @var string A fake CloudFront domain used when building test presigned URLs. */
     private const CF_DOMAIN = 'https://abc123.cloudfront.net';
