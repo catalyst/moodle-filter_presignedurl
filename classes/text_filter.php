@@ -209,8 +209,8 @@ class text_filter extends base_text_filter {
                        f.itemid, f.filepath, f.filename
                   FROM {files} f
                  WHERE f.contenthash {$insql}
-                   AND f.filename  != '.'
-                   AND f.filearea  != 'draft'
+                       AND f.filename  != '.'
+                       AND f.filearea  != 'draft'
               ORDER BY f.id ASC";
 
         $recordset = $DB->get_recordset_sql($sql, $inparams);
