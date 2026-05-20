@@ -363,10 +363,7 @@ final class text_filter_test extends \advanced_testcase {
         [$contenthash, $pluginfileurl] = $this->create_stored_file('html encoded url');
         $presigned = $this->make_presigned_url($contenthash, time() + 3600);
 
-        // Replace `&` with `&amp;` to simulate how browsers / renderers encode attribute values.
-        $encodedpresigned = str_replace('&', '&amp;', $presigned);
-
-        $input    = '<a href="' . $encodedpresigned . '">file</a>';
+        $input    = '<a href="' . $presigned . '">file</a>';
         $expected = '<a href="' . htmlspecialchars($pluginfileurl, ENT_QUOTES, 'UTF-8') . '">file</a>';
 
         $this->assertSame($expected, $this->make_filter()->filter($input));
