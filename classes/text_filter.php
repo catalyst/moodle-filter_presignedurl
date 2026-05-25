@@ -69,6 +69,8 @@ class text_filter extends base_text_filter {
         if (empty($cfdomain)) {
             return $text;
         }
+        // Strip scheme so we have a bare hostname for comparison with parse_url() host.
+        $cfdomain = parse_url($cfdomain, PHP_URL_HOST) ?? $cfdomain;
 
         // Exit if text is not CloudFront signed URL.
         if (!str_contains($text, 'Expires=') || !str_contains($text, 'Key-Pair-Id=')) {
