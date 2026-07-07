@@ -170,12 +170,6 @@ class text_filter extends base_text_filter {
             return null;
         }
 
-        // Confirm CloudFront signature markers are present.
-        parse_str($parsed['query'], $params);
-        if (empty($params['Expires']) || empty($params['Key-Pair-Id'])) {
-            return null;
-        }
-
         return $segment;
     }
 
